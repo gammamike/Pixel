@@ -1,16 +1,16 @@
 extends Node
 ## Save/load manager with atomic write protection.
 ##
-## This autoload singleton handles all save and load operations using Godot's Resource-based
-## serialization system. Implements atomic write pattern (save to temp, backup existing, rename)
+## This autoload singleton handles all save and load operations using JSON
+## serialization. Implements atomic write pattern (save to temp, backup existing, rename)
 ## to prevent save file corruption from crashes or power loss.
 
-const SAVE_PATH := "user://savegame.tres"
+const SAVE_PATH := "user://savegame.json"
 const TEMP_PATH := "user://savegame.tmp"
 const BACKUP_PATH := "user://savegame.bak"
 const AUTOSAVE_INTERVAL := 10
 
-var current_save: SaveGame = null
+var current_save: Dictionary = {}
 var turns_since_autosave: int = 0
 var pending_event_log_entries: Array[String] = []
 
@@ -21,9 +21,6 @@ func _ready() -> void:
 
 func save_game() -> bool:
 	"""Save current game state with atomic write protection."""
-	if current_save == null:
-		current_save = SaveGame.new()
-
 	# Collect event log entries from listeners
 	pending_event_log_entries.clear()
 	GameEvents.save_requested.emit()
@@ -33,16 +30,26 @@ func save_game() -> bool:
 		push_warning("SaveManager: No event log entries collected during save. EventLog node may not be in scene tree.")
 
 	# Populate save data from game state
-	current_save.timestamp = Time.get_unix_time_from_system()
-	current_save.current_turn = GameState.current_turn
-	current_save.game_time = GameState.game_time.duplicate()
-	current_save.event_log_entries = pending_event_log_entries.duplicate()
+	current_save = {
+		"save_version": 1,
+		"timestamp": Time.get_unix_time_from_system(),
+		"current_turn": GameState.current_turn,
+		"game_time": GameState.game_time.duplicate(),
+		"event_log_entries": pending_event_log_entries.duplicate()
+	}
+
+	# Convert to JSON
+	var json_string := JSON.stringify(current_save, "\t")
 
 	# Save to temporary file first (atomic write pattern)
-	var error := ResourceSaver.save(current_save, TEMP_PATH)
-	if error != OK:
-		push_error("Failed to save game to temp file: " + str(error))
+	var file := FileAccess.open(TEMP_PATH, FileAccess.WRITE)
+	if file == null:
+		var error := FileAccess.get_open_error()
+		push_error("Failed to open temp file for writing: " + str(error))
 		return false
+
+	file.store_string(json_string)
+	file.close()
 
 	# Backup existing save if it exists
 	if FileAccess.file_exists(SAVE_PATH):
@@ -65,60 +72,78 @@ func save_game() -> bool:
 
 func load_game() -> bool:
 	"""Load game state from save file."""
-	if not ResourceLoader.exists(SAVE_PATH):
+	if not FileAccess.file_exists(SAVE_PATH):
 		push_warning("No save file found at: " + SAVE_PATH)
 		return false
 
-	# Load with CACHE_MODE_IGNORE to prevent stale data
-	current_save = ResourceLoader.load(SAVE_PATH, "", ResourceLoader.CACHE_MODE_IGNORE)
-	if current_save == null:
-		push_error("Failed to load save file")
+	# Load JSON file
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		var error := FileAccess.get_open_error()
+		push_error("Failed to open save file: " + str(error))
 		return false
 
+	var json_string := file.get_as_text()
+	file.close()
+
+	# Parse JSON
+	var json := JSON.new()
+	var parse_error := json.parse(json_string)
+	if parse_error != OK:
+		push_error("Failed to parse save file JSON at line " + str(json.get_error_line()) + ": " + json.get_error_message())
+		return false
+
+	current_save = json.data
+
 	# Restore game state
-	GameState.current_turn = current_save.current_turn
-	GameState.game_time = current_save.game_time.duplicate()
+	GameState.current_turn = current_save.get("current_turn", 0)
+	GameState.game_time = current_save.get("game_time", {"day": 0, "month": 1, "year": 1}).duplicate()
 
 	# Emit signals
 	GameEvents.game_loaded.emit()
-	GameEvents.notification_requested.emit(
-		"Game loaded - Turn %d" % current_save.current_turn,
-		"info"
-	)
-
+	var turn_text := "Turn " + str(current_save.get("current_turn", 0))
+	GameEvents.notification_requested.emit("Game loaded - " + turn_text, "info")
 	return true
-
-
-func new_game() -> void:
-	"""Start a new game, clearing all state and triggering reload of UI."""
-	GameState.reset()
-	current_save = null
-	turns_since_autosave = 0
-	GameEvents.game_loaded.emit()
 
 
 func has_save() -> bool:
 	"""Check if a save file exists."""
-	return ResourceLoader.exists(SAVE_PATH)
+	return FileAccess.file_exists(SAVE_PATH)
+
+
+func new_game() -> void:
+	"""Start a new game by resetting all state."""
+	GameState.reset()
+	current_save = {}
+	turns_since_autosave = 0
+	GameEvents.game_loaded.emit()
 
 
 func get_save_info() -> Dictionary:
-	"""Get save file metadata without full load."""
+	"""Get save file info without full load (for UI display)."""
 	if not has_save():
 		return {}
 
-	var save := ResourceLoader.load(SAVE_PATH, "", ResourceLoader.CACHE_MODE_IGNORE) as SaveGame
-	if save == null:
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
 		return {}
 
+	var json_string := file.get_as_text()
+	file.close()
+
+	var json := JSON.new()
+	if json.parse(json_string) != OK:
+		return {}
+
+	var data: Dictionary = json.data
 	return {
-		"timestamp": save.timestamp,
-		"turn": save.current_turn
+		"timestamp": data.get("timestamp", 0),
+		"turn": data.get("current_turn", 0)
 	}
 
 
 func _on_turn_completed(turn_number: int) -> void:
-	"""Handle autosave on turn completion."""
+	"""Handle autosave logic."""
 	turns_since_autosave += 1
 	if turns_since_autosave >= AUTOSAVE_INTERVAL:
 		save_game()

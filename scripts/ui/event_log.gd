@@ -66,9 +66,10 @@ func _on_game_loaded() -> void:
 	clear_log()
 
 	# Reload entries from SaveManager if available
-	if SaveManager.current_save != null and not SaveManager.current_save.event_log_entries.is_empty():
+	if not SaveManager.current_save.is_empty() and SaveManager.current_save.has("event_log_entries"):
+		var saved_entries: Array = SaveManager.current_save.get("event_log_entries", [])
 		# Replay each saved entry through add_log_entry to rebuild log
-		for entry in SaveManager.current_save.event_log_entries:
+		for entry in saved_entries:
 			# Use direct append to avoid triggering auto-scroll for every entry
 			log_entries.append(entry)
 			if log_label.text.is_empty():
