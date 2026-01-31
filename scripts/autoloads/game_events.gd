@@ -11,6 +11,7 @@ signal turn_started(turn_number: int)
 # Save/load signals
 signal game_saved()
 signal game_loaded()
+signal save_requested()
 
 # Game event signals (for logging and notifications)
 signal production_occurred(factory_name: String, item_name: String, quantity: int)

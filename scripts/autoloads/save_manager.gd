@@ -12,6 +12,7 @@ const AUTOSAVE_INTERVAL := 10
 
 var current_save: SaveGame = null
 var turns_since_autosave: int = 0
+var pending_event_log_entries: PackedStringArray = PackedStringArray()
 
 
 func _ready() -> void:
@@ -23,10 +24,19 @@ func save_game() -> bool:
 	if current_save == null:
 		current_save = SaveGame.new()
 
+	# Collect event log entries from listeners
+	pending_event_log_entries.clear()
+	GameEvents.save_requested.emit()
+
+	# Warn if no event log entries were collected (EventLog may not be in scene tree)
+	if pending_event_log_entries.is_empty():
+		push_warning("SaveManager: No event log entries collected during save. EventLog node may not be in scene tree.")
+
 	# Populate save data from game state
 	current_save.timestamp = Time.get_unix_time_from_system()
 	current_save.current_turn = GameState.current_turn
 	current_save.game_time = GameState.game_time.duplicate()
+	current_save.event_log_entries = pending_event_log_entries.duplicate()
 
 	# Save to temporary file first (atomic write pattern)
 	var error := ResourceSaver.save(current_save, TEMP_PATH)
@@ -77,6 +87,14 @@ func load_game() -> bool:
 	)
 
 	return true
+
+
+func new_game() -> void:
+	"""Start a new game, clearing all state and triggering reload of UI."""
+	GameState.reset()
+	current_save = null
+	turns_since_autosave = 0
+	GameEvents.game_loaded.emit()
 
 
 func has_save() -> bool:

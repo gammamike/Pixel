@@ -23,6 +23,7 @@ func _connect_signals() -> void:
 	GameEvents.delivery_made.connect(_on_delivery_made)
 	GameEvents.log_entry_added.connect(_on_log_entry_added)
 	GameEvents.game_loaded.connect(_on_game_loaded)
+	GameEvents.save_requested.connect(_on_save_requested)
 
 
 func add_log_entry(text: String) -> void:
@@ -55,18 +56,31 @@ func _on_log_entry_added(text: String) -> void:
 	add_log_entry(text)
 
 
+func _on_save_requested() -> void:
+	"""Push current log entries to SaveManager for persistence."""
+	SaveManager.pending_event_log_entries = log_entries.duplicate()
+
+
 func _on_game_loaded() -> void:
 	"""Clear and reload log entries when a game is loaded."""
 	clear_log()
 
 	# Reload entries from SaveManager if available
-	if SaveManager.current_save and SaveManager.current_save.has("event_log_entries"):
-		var saved_entries = SaveManager.current_save.event_log_entries
-		for entry in saved_entries:
+	if SaveManager.current_save != null and not SaveManager.current_save.event_log_entries.is_empty():
+		# Replay each saved entry through add_log_entry to rebuild log
+		for entry in SaveManager.current_save.event_log_entries:
+			# Use direct append to avoid triggering auto-scroll for every entry
 			log_entries.append(entry)
-			log_label.append_text("\n" + entry)
+			if log_label.text.is_empty():
+				log_label.append_text(entry)
+			else:
+				log_label.append_text("\n" + entry)
+		# Auto-scroll to bottom after all entries restored
+		await get_tree().process_frame
+		scroll_container.scroll_vertical = int(scroll_container.get_v_scroll_bar().max_value)
 	else:
-		add_log_entry("Game loaded.")
+		# New game or no save data
+		add_log_entry("Game started.")
 
 
 func get_entries() -> PackedStringArray:

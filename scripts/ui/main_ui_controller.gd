@@ -44,9 +44,7 @@ func _on_file_menu_item_selected(id: int) -> void:
 	"""Handle File menu item selection."""
 	match id:
 		0:  # New Game
-			GameState.reset()
-			GameEvents.game_loaded.emit()
-			_update_turn_label()
+			SaveManager.new_game()
 		1:  # Save
 			SaveManager.save_game()
 		2:  # Load
