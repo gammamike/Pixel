@@ -1,7 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://cn4xbqjphp68w"]
+[gd_scene load_steps=3 format=3 uid="uid://cn4xbqjphp68w"]
 
 [ext_resource type="PackedScene" uid="uid://dh5wfg1i1s7lc" path="res://scenes/ui/main_ui.tscn" id="1_main_ui"]
+[ext_resource type="PackedScene" uid="uid://bt8vx9k1m7nqp" path="res://scenes/ui/notifications.tscn" id="2_notifications"]
 
 [node name="Main" type="Node"]
 
 [node name="MainUI" parent="." instance=ExtResource("1_main_ui")]
+
+[node name="Notifications" parent="." instance=ExtResource("2_notifications")]
