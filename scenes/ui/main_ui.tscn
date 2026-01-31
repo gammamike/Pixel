@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://dh5wfg1i1s7lc"]
+[gd_scene load_steps=7 format=3 uid="uid://dh5wfg1i1s7lc"]
 
 [ext_resource type="Script" path="res://scripts/ui/main_ui_controller.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://cv8ywg8k0n7jb" path="res://scenes/ui/map_view.tscn" id="1_map"]
 [ext_resource type="PackedScene" uid="uid://cpkj5wuomxuae" path="res://scenes/ui/factories_view.tscn" id="2_factories"]
 [ext_resource type="PackedScene" uid="uid://dqfx35kwo5hvp" path="res://scenes/ui/logistics_view.tscn" id="3_logistics"]
 [ext_resource type="PackedScene" uid="uid://bk6yj1vcpslm0" path="res://scenes/ui/research_view.tscn" id="4_research"]
+[ext_resource type="PackedScene" uid="uid://cqv3kx8y5n6mb" path="res://scenes/ui/event_log.tscn" id="5_event_log"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.15, 0.15, 0.15, 1)
@@ -77,22 +78,30 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "End Turn"
 
-[node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
-unique_name_in_owner = true
+[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Map" parent="VBoxContainer/TabContainer" instance=ExtResource("1_map")]
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer/HSplitContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="Map" parent="VBoxContainer/HSplitContainer/TabContainer" instance=ExtResource("1_map")]
 layout_mode = 2
 
-[node name="Factories" parent="VBoxContainer/TabContainer" instance=ExtResource("2_factories")]
+[node name="Factories" parent="VBoxContainer/HSplitContainer/TabContainer" instance=ExtResource("2_factories")]
 visible = false
 layout_mode = 2
 
-[node name="Logistics" parent="VBoxContainer/TabContainer" instance=ExtResource("3_logistics")]
+[node name="Logistics" parent="VBoxContainer/HSplitContainer/TabContainer" instance=ExtResource("3_logistics")]
 visible = false
 layout_mode = 2
 
-[node name="Research" parent="VBoxContainer/TabContainer" instance=ExtResource("4_research")]
+[node name="Research" parent="VBoxContainer/HSplitContainer/TabContainer" instance=ExtResource("4_research")]
 visible = false
+layout_mode = 2
+
+[node name="EventLog" parent="VBoxContainer/HSplitContainer" instance=ExtResource("5_event_log")]
 layout_mode = 2
