@@ -10,7 +10,7 @@ extends Resource
 @export var timestamp: int = 0
 @export var current_turn: int = 0
 @export var game_time: Dictionary = {}
-@export var event_log_entries: PackedStringArray = PackedStringArray()
+@export var event_log_entries: Array[String] = []
 
 # Phase 2+: factories, resources, convoys, research
 # @export var factories: Array[Dictionary] = []

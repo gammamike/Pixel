@@ -8,7 +8,7 @@ extends PanelContainer
 @onready var scroll_container: ScrollContainer = %ScrollContainer
 @onready var log_label: RichTextLabel = %LogLabel
 
-var log_entries: PackedStringArray = PackedStringArray()
+var log_entries: Array[String] = []
 
 
 func _ready() -> void:

@@ -12,7 +12,7 @@ const AUTOSAVE_INTERVAL := 10
 
 var current_save: SaveGame = null
 var turns_since_autosave: int = 0
-var pending_event_log_entries: PackedStringArray = PackedStringArray()
+var pending_event_log_entries: Array[String] = []
 
 
 func _ready() -> void:
