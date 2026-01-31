@@ -1,0 +1,96 @@
+[gd_scene load_steps=5 format=3 uid="uid://dh5wfg1i1s7lc"]
+
+[ext_resource type="PackedScene" uid="uid://cv8ywg8k0n7jb" path="res://scenes/ui/map_view.tscn" id="1_map"]
+[ext_resource type="PackedScene" uid="uid://cpkj5wuomxuae" path="res://scenes/ui/factories_view.tscn" id="2_factories"]
+[ext_resource type="PackedScene" uid="uid://dqfx35kwo5hvp" path="res://scenes/ui/logistics_view.tscn" id="3_logistics"]
+[ext_resource type="PackedScene" uid="uid://bk6yj1vcpslm0" path="res://scenes/ui/research_view.tscn" id="4_research"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.15, 0.15, 0.15, 1)
+
+[node name="MainUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="MenuBarRow" type="HBoxContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="FileMenuButton" type="MenuButton" parent="VBoxContainer/MenuBarRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "File"
+
+[node name="TurnInfoBar" type="HBoxContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="Panel" type="Panel" parent="VBoxContainer/TurnInfoBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/TurnInfoBar/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TurnInfoBar/Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="TurnLabel" type="Label" parent="VBoxContainer/TurnInfoBar/Panel/MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Turn 0 (Day 0, Month 1, Year 1)"
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="VBoxContainer/TurnInfoBar/Panel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EndTurnButton" type="Button" parent="VBoxContainer/TurnInfoBar/Panel/MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "End Turn"
+
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Map" parent="VBoxContainer/TabContainer" instance=ExtResource("1_map")]
+layout_mode = 2
+
+[node name="Factories" parent="VBoxContainer/TabContainer" instance=ExtResource("2_factories")]
+visible = false
+layout_mode = 2
+
+[node name="Logistics" parent="VBoxContainer/TabContainer" instance=ExtResource("3_logistics")]
+visible = false
+layout_mode = 2
+
+[node name="Research" parent="VBoxContainer/TabContainer" instance=ExtResource("4_research")]
+visible = false
+layout_mode = 2
